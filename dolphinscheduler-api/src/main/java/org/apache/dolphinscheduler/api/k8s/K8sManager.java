@@ -17,7 +17,7 @@
 
 package org.apache.dolphinscheduler.api.k8s;
 
-import org.apache.dolphinscheduler.common.utils.ClusterConfUtils;
+import org.apache.dolphinscheduler.api.utils.ClusterConfUtils;
 import org.apache.dolphinscheduler.dao.entity.Cluster;
 import org.apache.dolphinscheduler.dao.mapper.ClusterMapper;
 import org.apache.dolphinscheduler.remote.exceptions.RemotingException;
@@ -123,7 +123,7 @@ public class K8sManager {
             Config config = Config.fromKubeconfig(configYaml);
             return new DefaultKubernetesClient(config);
         } catch (Exception e) {
-            logger.error("fail to get k8s ApiClient", e);
+            logger.error("Fail to get k8s ApiClient", e);
             throw new RemotingException("fail to get k8s ApiClient:" + e.getMessage());
         }
     }

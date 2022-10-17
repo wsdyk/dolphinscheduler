@@ -30,7 +30,6 @@ import org.apache.dolphinscheduler.api.utils.RegexUtils;
 import org.apache.dolphinscheduler.api.utils.Result;
 import org.apache.dolphinscheduler.common.Constants;
 import org.apache.dolphinscheduler.common.enums.AuthorizationType;
-import org.apache.dolphinscheduler.common.storage.StorageOperate;
 import org.apache.dolphinscheduler.common.utils.PropertyUtils;
 import org.apache.dolphinscheduler.dao.entity.ProcessDefinition;
 import org.apache.dolphinscheduler.dao.entity.ProcessInstance;
@@ -41,6 +40,7 @@ import org.apache.dolphinscheduler.dao.mapper.ProcessDefinitionMapper;
 import org.apache.dolphinscheduler.dao.mapper.ProcessInstanceMapper;
 import org.apache.dolphinscheduler.dao.mapper.TenantMapper;
 import org.apache.dolphinscheduler.dao.mapper.UserMapper;
+import org.apache.dolphinscheduler.service.storage.StorageOperate;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -111,6 +111,7 @@ public class TenantServiceImpl extends BaseServiceImpl implements TenantService 
     private void updateTenantValid(Tenant existsTenant, Tenant updateTenant) throws ServiceException {
         // Check the exists tenant
         if (Objects.isNull(existsTenant)) {
+            logger.error("Tenant does not exist.");
             throw new ServiceException(Status.TENANT_NOT_EXIST);
         }
         // Check the update tenant parameters
@@ -147,6 +148,7 @@ public class TenantServiceImpl extends BaseServiceImpl implements TenantService 
             throw new ServiceException(Status.USER_NO_OPERATION_PERM);
         }
         if(checkDescriptionLength(desc)){
+            logger.warn("Parameter description is too long.");
             putMsg(result, Status.DESCRIPTION_TOO_LONG_ERROR);
             return result;
         }
@@ -215,6 +217,7 @@ public class TenantServiceImpl extends BaseServiceImpl implements TenantService 
             throw new ServiceException(Status.USER_NO_OPERATION_PERM);
         }
         if(checkDescriptionLength(desc)){
+            logger.warn("Parameter description is too long.");
             putMsg(result, Status.DESCRIPTION_TOO_LONG_ERROR);
             return result;
         }
@@ -229,9 +232,14 @@ public class TenantServiceImpl extends BaseServiceImpl implements TenantService 
         if (!Objects.equals(existsTenant.getTenantCode(), updateTenant.getTenantCode()) && PropertyUtils.getResUploadStartupState()) {
             storageOperate.createTenantDirIfNotExists(tenantCode);
         }
-        tenantMapper.updateById(updateTenant);
-
-        putMsg(result, Status.SUCCESS);
+        int update = tenantMapper.updateById(updateTenant);
+        if (update > 0) {
+            logger.info("Tenant is updated and id is {}.", updateTenant.getId());
+            putMsg(result, Status.SUCCESS);
+        } else {
+            logger.error("Tenant update error, id:{}.", updateTenant.getId());
+            putMsg(result, Status.UPDATE_TENANT_ERROR);
+        }
         return result;
     }
 
@@ -254,22 +262,26 @@ public class TenantServiceImpl extends BaseServiceImpl implements TenantService 
 
         Tenant tenant = tenantMapper.queryById(id);
         if (Objects.isNull(tenant)) {
+            logger.error("Tenant does not exist, userId:{}.", id);
             throw new ServiceException(Status.TENANT_NOT_EXIST);
         }
 
         List<ProcessInstance> processInstances = getProcessInstancesByTenant(tenant);
         if (CollectionUtils.isNotEmpty(processInstances)) {
+            logger.warn("Delete tenant failed, because there are {} executing process instances using it.", processInstances.size());
             throw new ServiceException(Status.DELETE_TENANT_BY_ID_FAIL, processInstances.size());
         }
 
         List<ProcessDefinition> processDefinitions =
                 processDefinitionMapper.queryDefinitionListByTenant(tenant.getId());
         if (CollectionUtils.isNotEmpty(processDefinitions)) {
+            logger.warn("Delete tenant failed, because there are {} process definitions using it.", processDefinitions.size());
             throw new ServiceException(Status.DELETE_TENANT_BY_ID_FAIL_DEFINES, processDefinitions.size());
         }
 
         List<User> userList = userMapper.queryUserListByTenant(tenant.getId());
         if (CollectionUtils.isNotEmpty(userList)) {
+            logger.warn("Delete tenant failed, because there are {} users using it.", userList.size());
             throw new ServiceException(Status.DELETE_TENANT_BY_ID_FAIL_USERS, userList.size());
         }
 
@@ -278,15 +290,21 @@ public class TenantServiceImpl extends BaseServiceImpl implements TenantService 
           storageOperate.deleteTenant(tenant.getTenantCode());
         }
 
-        tenantMapper.deleteById(id);
-        processInstanceMapper.updateProcessInstanceByTenantId(id, -1);
+        int delete = tenantMapper.deleteById(id);
+        if (delete > 0) {
+            processInstanceMapper.updateProcessInstanceByTenantId(id, -1);
+            logger.info("Tenant is deleted and id is {}.", id);
+            putMsg(result, Status.SUCCESS);
+        } else {
+            logger.error("Tenant delete failed, tenantId:{}.", id);
+            putMsg(result, Status.DELETE_TENANT_BY_ID_ERROR);
+        }
 
-        putMsg(result, Status.SUCCESS);
         return result;
     }
 
     private List<ProcessInstance> getProcessInstancesByTenant(Tenant tenant) {
-        return processInstanceMapper.queryByTenantIdAndStatus(tenant.getId(), Constants.NOT_TERMINATED_STATES);
+        return processInstanceMapper.queryByTenantIdAndStatus(tenant.getId(), org.apache.dolphinscheduler.service.utils.Constants.NOT_TERMINATED_STATES);
     }
 
     /**
@@ -315,7 +333,7 @@ public class TenantServiceImpl extends BaseServiceImpl implements TenantService 
      * verify tenant code
      *
      * @param tenantCode tenant code
-     * @return true if tenant code can user, otherwise return false
+     * @return true if tenant code can use, otherwise return false
      */
     @Override
     public Result<Object> verifyTenantCode(String tenantCode) {

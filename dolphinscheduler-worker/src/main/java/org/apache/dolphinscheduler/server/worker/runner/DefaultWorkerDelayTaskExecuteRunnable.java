@@ -18,12 +18,13 @@
 package org.apache.dolphinscheduler.server.worker.runner;
 
 import lombok.NonNull;
-import org.apache.dolphinscheduler.common.storage.StorageOperate;
+import org.apache.dolphinscheduler.plugin.task.api.TaskCallBack;
 import org.apache.dolphinscheduler.plugin.task.api.TaskException;
 import org.apache.dolphinscheduler.plugin.task.api.TaskExecutionContext;
 import org.apache.dolphinscheduler.server.worker.config.WorkerConfig;
 import org.apache.dolphinscheduler.server.worker.rpc.WorkerMessageSender;
 import org.apache.dolphinscheduler.service.alert.AlertClientService;
+import org.apache.dolphinscheduler.service.storage.StorageOperate;
 import org.apache.dolphinscheduler.service.task.TaskPluginManager;
 
 import javax.annotation.Nullable;
@@ -41,11 +42,11 @@ public class DefaultWorkerDelayTaskExecuteRunnable extends WorkerDelayTaskExecut
     }
 
     @Override
-    public void executeTask() throws TaskException {
+    public void executeTask(TaskCallBack taskCallBack) throws TaskException {
         if (task == null) {
             throw new TaskException("The task plugin instance is not initialized");
         }
-        task.handle();
+        task.handle(taskCallBack);
     }
 
     @Override
