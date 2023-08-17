@@ -17,7 +17,6 @@
 
 package org.apache.dolphinscheduler.plugin.task.datax;
 
-import com.alibaba.druid.sql.dialect.presto.parser.PrestoStatementParser;
 import org.apache.dolphinscheduler.spi.enums.DbType;
 
 import com.alibaba.druid.sql.dialect.clickhouse.parser.ClickhouseStatementParser;
@@ -25,6 +24,7 @@ import com.alibaba.druid.sql.dialect.hive.parser.HiveStatementParser;
 import com.alibaba.druid.sql.dialect.mysql.parser.MySqlStatementParser;
 import com.alibaba.druid.sql.dialect.oracle.parser.OracleStatementParser;
 import com.alibaba.druid.sql.dialect.postgresql.parser.PGSQLStatementParser;
+import com.alibaba.druid.sql.dialect.presto.parser.PrestoStatementParser;
 import com.alibaba.druid.sql.dialect.sqlserver.parser.SQLServerStatementParser;
 import com.alibaba.druid.sql.parser.SQLStatementParser;
 
@@ -51,6 +51,7 @@ public class DataxUtils {
     public static final String DATAX_WRITER_PLUGIN_SQLSERVER = "sqlserverwriter";
 
     public static final String DATAX_WRITER_PLUGIN_CLICKHOUSE = "clickhousewriter";
+    public static final String DATAX_WRITER_PLUGIN_DATABEND = "databendwriter";
 
     public static final String DATAX_WRITER_PLUGIN_RDBMS = "rdbmswriter";
 
@@ -67,11 +68,9 @@ public class DataxUtils {
             case CLICKHOUSE:
                 return DATAX_READER_PLUGIN_CLICKHOUSE;
             case HIVE:
-                return DATAX_READER_PLUGIN_RDBMS;
             case PRESTO:
-                return DATAX_READER_PLUGIN_RDBMS;
             default:
-                return null;
+                return DATAX_READER_PLUGIN_RDBMS;
         }
     }
 
@@ -87,12 +86,12 @@ public class DataxUtils {
                 return DATAX_WRITER_PLUGIN_SQLSERVER;
             case CLICKHOUSE:
                 return DATAX_WRITER_PLUGIN_CLICKHOUSE;
+            case DATABEND:
+                return DATAX_WRITER_PLUGIN_DATABEND;
             case HIVE:
-                return DATAX_WRITER_PLUGIN_RDBMS;
             case PRESTO:
-                return DATAX_WRITER_PLUGIN_RDBMS;
             default:
-                return null;
+                return DATAX_WRITER_PLUGIN_RDBMS;
         }
     }
 
@@ -148,8 +147,10 @@ public class DataxUtils {
             case ORACLE:
                 return String.format("\"%s\"", column);
             case SQLSERVER:
-                return String.format("`%s`", column);
+                return String.format("\"%s\"", column);
             case CLICKHOUSE:
+                return String.format("`%s`", column);
+            case DATABEND:
                 return String.format("`%s`", column);
             default:
                 return column;

@@ -17,25 +17,33 @@
 
 package org.apache.dolphinscheduler.server.master.runner;
 
-import static org.apache.dolphinscheduler.common.Constants.CMDPARAM_COMPLEMENT_DATA_END_DATE;
-import static org.apache.dolphinscheduler.common.Constants.CMDPARAM_COMPLEMENT_DATA_START_DATE;
-import static org.apache.dolphinscheduler.common.Constants.CMD_PARAM_RECOVERY_START_NODE_STRING;
-import static org.apache.dolphinscheduler.common.Constants.CMD_PARAM_START_NODES;
+import static org.apache.dolphinscheduler.common.constants.CommandKeyConstants.CMD_PARAM_COMPLEMENT_DATA_END_DATE;
+import static org.apache.dolphinscheduler.common.constants.CommandKeyConstants.CMD_PARAM_COMPLEMENT_DATA_START_DATE;
+import static org.apache.dolphinscheduler.common.constants.CommandKeyConstants.CMD_PARAM_RECOVERY_START_NODE_STRING;
+import static org.apache.dolphinscheduler.common.constants.CommandKeyConstants.CMD_PARAM_START_NODES;
 
+import org.apache.dolphinscheduler.common.enums.CommandType;
 import org.apache.dolphinscheduler.common.enums.ProcessExecutionTypeEnum;
 import org.apache.dolphinscheduler.common.enums.WorkflowExecutionStatus;
 import org.apache.dolphinscheduler.common.graph.DAG;
+import org.apache.dolphinscheduler.common.model.TaskNodeRelation;
 import org.apache.dolphinscheduler.common.utils.JSONUtils;
 import org.apache.dolphinscheduler.dao.entity.ProcessDefinition;
 import org.apache.dolphinscheduler.dao.entity.ProcessInstance;
 import org.apache.dolphinscheduler.dao.entity.Schedule;
 import org.apache.dolphinscheduler.dao.entity.TaskInstance;
 import org.apache.dolphinscheduler.dao.repository.ProcessInstanceDao;
+import org.apache.dolphinscheduler.dao.repository.TaskDefinitionLogDao;
+import org.apache.dolphinscheduler.dao.repository.TaskInstanceDao;
 import org.apache.dolphinscheduler.server.master.config.MasterConfig;
-import org.apache.dolphinscheduler.server.master.dispatch.executor.NettyExecutorManager;
+import org.apache.dolphinscheduler.server.master.graph.IWorkflowGraph;
+import org.apache.dolphinscheduler.server.master.rpc.MasterRpcClient;
+import org.apache.dolphinscheduler.server.master.runner.execute.DefaultTaskExecuteRunnableFactory;
 import org.apache.dolphinscheduler.service.alert.ProcessAlertManager;
 import org.apache.dolphinscheduler.service.bean.SpringApplicationContext;
+import org.apache.dolphinscheduler.service.command.CommandService;
 import org.apache.dolphinscheduler.service.expand.CuringParamsService;
+import org.apache.dolphinscheduler.service.model.TaskNode;
 import org.apache.dolphinscheduler.service.process.ProcessService;
 
 import java.lang.reflect.Field;
@@ -62,6 +70,8 @@ import org.mockito.junit.jupiter.MockitoSettings;
 import org.mockito.quality.Strictness;
 import org.springframework.context.ApplicationContext;
 
+import com.google.common.collect.Sets;
+
 @ExtendWith(MockitoExtension.class)
 @MockitoSettings(strictness = Strictness.LENIENT)
 public class WorkflowExecuteRunnableTest {
@@ -70,7 +80,12 @@ public class WorkflowExecuteRunnableTest {
 
     private ProcessInstance processInstance;
 
+    private TaskInstanceDao taskInstanceDao;
+
+    private TaskDefinitionLogDao taskDefinitionLogDao;
     private ProcessService processService;
+
+    private CommandService commandService;
 
     private ProcessInstanceDao processInstanceDao;
 
@@ -82,6 +97,10 @@ public class WorkflowExecuteRunnableTest {
 
     private CuringParamsService curingGlobalParamsService;
 
+    private DefaultTaskExecuteRunnableFactory defaultTaskExecuteRunnableFactory;
+
+    private WorkflowExecuteContextFactory workflowExecuteContextFactory;
+
     @BeforeEach
     public void init() throws Exception {
         applicationContext = Mockito.mock(ApplicationContext.class);
@@ -90,11 +109,17 @@ public class WorkflowExecuteRunnableTest {
 
         config = new MasterConfig();
         processService = Mockito.mock(ProcessService.class);
+        commandService = Mockito.mock(CommandService.class);
         processInstanceDao = Mockito.mock(ProcessInstanceDao.class);
         processInstance = Mockito.mock(ProcessInstance.class);
+        taskInstanceDao = Mockito.mock(TaskInstanceDao.class);
+        taskDefinitionLogDao = Mockito.mock(TaskDefinitionLogDao.class);
+        defaultTaskExecuteRunnableFactory = Mockito.mock(DefaultTaskExecuteRunnableFactory.class);
+        workflowExecuteContextFactory = Mockito.mock(WorkflowExecuteContextFactory.class);
+
         Map<String, String> cmdParam = new HashMap<>();
-        cmdParam.put(CMDPARAM_COMPLEMENT_DATA_START_DATE, "2020-01-01 00:00:00");
-        cmdParam.put(CMDPARAM_COMPLEMENT_DATA_END_DATE, "2020-01-20 23:00:00");
+        cmdParam.put(CMD_PARAM_COMPLEMENT_DATA_START_DATE, "2020-01-01 00:00:00");
+        cmdParam.put(CMD_PARAM_COMPLEMENT_DATA_END_DATE, "2020-01-20 23:00:00");
         ProcessDefinition processDefinition = new ProcessDefinition();
         processDefinition.setGlobalParamMap(Collections.emptyMap());
         processDefinition.setGlobalParamList(Collections.emptyList());
@@ -102,14 +127,27 @@ public class WorkflowExecuteRunnableTest {
 
         stateWheelExecuteThread = Mockito.mock(StateWheelExecuteThread.class);
         curingGlobalParamsService = Mockito.mock(CuringParamsService.class);
-        NettyExecutorManager nettyExecutorManager = Mockito.mock(NettyExecutorManager.class);
+        MasterRpcClient masterRpcClient = Mockito.mock(MasterRpcClient.class);
         ProcessAlertManager processAlertManager = Mockito.mock(ProcessAlertManager.class);
+        WorkflowExecuteContext workflowExecuteContext = Mockito.mock(WorkflowExecuteContext.class);
+        Mockito.when(workflowExecuteContext.getWorkflowInstance()).thenReturn(processInstance);
+        IWorkflowGraph workflowGraph = Mockito.mock(IWorkflowGraph.class);
+        Mockito.when(workflowExecuteContext.getWorkflowGraph()).thenReturn(workflowGraph);
+        Mockito.when(workflowGraph.getDag()).thenReturn(new DAG<>());
+
         workflowExecuteThread = Mockito.spy(
-                new WorkflowExecuteRunnable(processInstance, processService, processInstanceDao, nettyExecutorManager,
-                        processAlertManager, config, stateWheelExecuteThread, curingGlobalParamsService));
-        Field dag = WorkflowExecuteRunnable.class.getDeclaredField("dag");
-        dag.setAccessible(true);
-        dag.set(workflowExecuteThread, new DAG());
+                new WorkflowExecuteRunnable(
+                        workflowExecuteContext,
+                        commandService,
+                        processService,
+                        processInstanceDao,
+                        masterRpcClient,
+                        processAlertManager,
+                        config,
+                        stateWheelExecuteThread,
+                        curingGlobalParamsService,
+                        taskInstanceDao,
+                        defaultTaskExecuteRunnableFactory));
     }
 
     @Test
@@ -141,7 +179,7 @@ public class WorkflowExecuteRunnableTest {
             taskInstance4.setId(4);
             Map<String, String> cmdParam = new HashMap<>();
             cmdParam.put(CMD_PARAM_RECOVERY_START_NODE_STRING, "1,2,3,4");
-            Mockito.when(processService.findTaskInstanceByIdList(
+            Mockito.when(taskInstanceDao.queryByIds(
                     Arrays.asList(taskInstance1.getId(), taskInstance2.getId(), taskInstance3.getId(),
                             taskInstance4.getId())))
                     .thenReturn(Arrays.asList(taskInstance1, taskInstance2, taskInstance3, taskInstance4));
@@ -165,9 +203,9 @@ public class WorkflowExecuteRunnableTest {
     @Test
     public void testGetPreVarPool() {
         try {
-            Set<String> preTaskName = new HashSet<>();
-            preTaskName.add(Long.toString(1));
-            preTaskName.add(Long.toString(2));
+            Set<Long> preTaskName = new HashSet<>();
+            preTaskName.add(1L);
+            preTaskName.add(2L);
 
             TaskInstance taskInstance = new TaskInstance();
 
@@ -187,28 +225,36 @@ public class WorkflowExecuteRunnableTest {
             taskInstanceMap.put(taskInstance1.getId(), taskInstance1);
             taskInstanceMap.put(taskInstance2.getId(), taskInstance2);
 
-            Map<Long, Integer> completeTaskList = new ConcurrentHashMap<>();
-            completeTaskList.put(taskInstance1.getTaskCode(), taskInstance1.getId());
-            completeTaskList.put(taskInstance2.getTaskCode(), taskInstance2.getId());
+            Map<Long, TaskInstance> taskCodeInstanceMap = new ConcurrentHashMap<>();
+            taskCodeInstanceMap.put(taskInstance1.getTaskCode(), taskInstance1);
+            taskCodeInstanceMap.put(taskInstance2.getTaskCode(), taskInstance2);
+
+            Set<Long> completeTaskSet = Sets.newConcurrentHashSet();
+            completeTaskSet.add(taskInstance1.getTaskCode());
+            completeTaskSet.add(taskInstance2.getTaskCode());
 
             Class<WorkflowExecuteRunnable> masterExecThreadClass = WorkflowExecuteRunnable.class;
 
-            Field completeTaskMapField = masterExecThreadClass.getDeclaredField("completeTaskMap");
-            completeTaskMapField.setAccessible(true);
-            completeTaskMapField.set(workflowExecuteThread, completeTaskList);
+            Field completeTaskSetField = masterExecThreadClass.getDeclaredField("completeTaskSet");
+            completeTaskSetField.setAccessible(true);
+            completeTaskSetField.set(workflowExecuteThread, completeTaskSet);
 
             Field taskInstanceMapField = masterExecThreadClass.getDeclaredField("taskInstanceMap");
             taskInstanceMapField.setAccessible(true);
             taskInstanceMapField.set(workflowExecuteThread, taskInstanceMap);
 
+            Field taskCodeInstanceMapField = masterExecThreadClass.getDeclaredField("taskCodeInstanceMap");
+            taskCodeInstanceMapField.setAccessible(true);
+            taskCodeInstanceMapField.set(workflowExecuteThread, taskCodeInstanceMap);
+
             workflowExecuteThread.getPreVarPool(taskInstance, preTaskName);
             Assertions.assertNotNull(taskInstance.getVarPool());
 
             taskInstance2.setVarPool("[{\"direct\":\"OUT\",\"prop\":\"test1\",\"type\":\"VARCHAR\",\"value\":\"2\"}]");
-            completeTaskList.put(taskInstance2.getTaskCode(), taskInstance2.getId());
+            completeTaskSet.add(taskInstance2.getTaskCode());
 
-            completeTaskMapField.setAccessible(true);
-            completeTaskMapField.set(workflowExecuteThread, completeTaskList);
+            completeTaskSetField.setAccessible(true);
+            completeTaskSetField.set(workflowExecuteThread, completeTaskSet);
             taskInstanceMapField.setAccessible(true);
             taskInstanceMapField.set(workflowExecuteThread, taskInstanceMap);
 
@@ -241,8 +287,79 @@ public class WorkflowExecuteRunnableTest {
             Mockito.when(processService.findProcessInstanceById(222)).thenReturn(processInstance9);
             workflowExecuteThread.checkSerialProcess(processDefinition1);
         } catch (Exception e) {
-            Assertions.fail();
+            Assertions.fail(e);
         }
+    }
+
+    @Test
+    public void testClearDataIfExecuteTask() throws NoSuchFieldException, IllegalAccessException {
+        TaskInstance taskInstance1 = new TaskInstance();
+        taskInstance1.setId(1);
+        taskInstance1.setTaskCode(1);
+
+        TaskInstance taskInstance2 = new TaskInstance();
+        taskInstance2.setId(2);
+        taskInstance2.setTaskCode(2);
+
+        Map<Integer, TaskInstance> taskInstanceMap = new ConcurrentHashMap<>();
+        taskInstanceMap.put(taskInstance1.getId(), taskInstance1);
+        taskInstanceMap.put(taskInstance2.getId(), taskInstance2);
+
+        Map<Long, TaskInstance> taskCodeInstanceMap = new ConcurrentHashMap<>();
+        taskCodeInstanceMap.put(taskInstance1.getTaskCode(), taskInstance1);
+        taskCodeInstanceMap.put(taskInstance2.getTaskCode(), taskInstance2);
+
+        Set<Long> completeTaskSet = Sets.newConcurrentHashSet();
+        completeTaskSet.add(taskInstance1.getTaskCode());
+        completeTaskSet.add(taskInstance2.getTaskCode());
+
+        Class<WorkflowExecuteRunnable> masterExecThreadClass = WorkflowExecuteRunnable.class;
+
+        Field completeTaskMapField = masterExecThreadClass.getDeclaredField("completeTaskSet");
+        completeTaskMapField.setAccessible(true);
+        completeTaskMapField.set(workflowExecuteThread, completeTaskSet);
+
+        Field taskInstanceMapField = masterExecThreadClass.getDeclaredField("taskInstanceMap");
+        taskInstanceMapField.setAccessible(true);
+        taskInstanceMapField.set(workflowExecuteThread, taskInstanceMap);
+
+        Field taskCodeInstanceMapField = masterExecThreadClass.getDeclaredField("taskCodeInstanceMap");
+        taskCodeInstanceMapField.setAccessible(true);
+        taskCodeInstanceMapField.set(workflowExecuteThread, taskCodeInstanceMap);
+
+        Mockito.when(processInstance.getCommandType()).thenReturn(CommandType.EXECUTE_TASK);
+        Mockito.when(processInstance.getId()).thenReturn(123);
+
+        DAG<Long, TaskNode, TaskNodeRelation> dag = Mockito.mock(DAG.class);
+        Set<Long> taskCodesString = new HashSet<>();
+        taskCodesString.add(1L);
+        taskCodesString.add(2L);
+        Mockito.when(dag.getAllNodesList()).thenReturn(taskCodesString);
+        Mockito.when(dag.containsNode(1L)).thenReturn(true);
+        Mockito.when(dag.containsNode(2L)).thenReturn(false);
+
+        WorkflowExecuteContext workflowExecuteContext = Mockito.mock(WorkflowExecuteContext.class);
+        Mockito.when(workflowExecuteContext.getWorkflowInstance()).thenReturn(processInstance);
+        IWorkflowGraph workflowGraph = Mockito.mock(IWorkflowGraph.class);
+        Mockito.when(workflowExecuteContext.getWorkflowGraph()).thenReturn(workflowGraph);
+        Mockito.when(workflowGraph.getDag()).thenReturn(dag);
+
+        Field dagField = masterExecThreadClass.getDeclaredField("workflowExecuteContext");
+        dagField.setAccessible(true);
+        dagField.set(workflowExecuteThread, workflowExecuteContext);
+
+        Mockito.when(taskInstanceDao.queryByWorkflowInstanceIdAndTaskCode(processInstance.getId(),
+                taskInstance1.getTaskCode()))
+                .thenReturn(taskInstance1);
+        Mockito.when(taskInstanceDao.queryByWorkflowInstanceIdAndTaskCode(processInstance.getId(),
+                taskInstance2.getTaskCode()))
+                .thenReturn(null);
+
+        workflowExecuteThread.clearDataIfExecuteTask();
+
+        Assertions.assertEquals(1, taskInstanceMap.size());
+        Assertions.assertEquals(1, completeTaskSet.size());
+
     }
 
     private List<Schedule> zeroSchedulerList() {

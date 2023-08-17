@@ -17,18 +17,17 @@
 
 package org.apache.dolphinscheduler.common.utils;
 
-import org.apache.dolphinscheduler.common.Constants;
+import static org.apache.dolphinscheduler.common.constants.DateConstants.YYYYMMDDHHMMSS;
+
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.MockedStatic;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
-
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-
-import static org.apache.dolphinscheduler.common.Constants.YYYYMMDDHHMMSS;
 
 @ExtendWith(MockitoExtension.class)
 public class FileUtilsTest {
@@ -50,8 +49,8 @@ public class FileUtilsTest {
 
     @Test
     public void testGetProcessExecDir() {
-        String dir = FileUtils.getProcessExecDir(1L, 2L, 1, 3, 4);
-        Assertions.assertEquals("/tmp/dolphinscheduler/exec/process/1/2_1/3/4", dir);
+        String dir = FileUtils.getProcessExecDir("test", 1L, 2L, 1, 3, 4);
+        Assertions.assertEquals("/tmp/dolphinscheduler/exec/process/test/1/2_1/3/4", dir);
     }
 
     @Test
@@ -59,18 +58,6 @@ public class FileUtilsTest {
         try {
             FileUtils.createWorkDirIfAbsent("/tmp/createWorkDirAndUserIfAbsent");
             Assertions.assertTrue(true);
-        } catch (Exception e) {
-            Assertions.fail();
-        }
-    }
-
-    @Test
-    public void testSetValue() {
-        try {
-            PropertyUtils.setValue(Constants.DATASOURCE_ENCRYPTION_ENABLE, "true");
-            Assertions.assertTrue(PropertyUtils.getBoolean(Constants.DATASOURCE_ENCRYPTION_ENABLE));
-            PropertyUtils.setValue(Constants.DATASOURCE_ENCRYPTION_ENABLE, "false");
-            Assertions.assertFalse(PropertyUtils.getBoolean(Constants.DATASOURCE_ENCRYPTION_ENABLE));
         } catch (Exception e) {
             Assertions.fail();
         }
@@ -115,6 +102,30 @@ public class FileUtilsTest {
 
         path = "abc/def...txt";
         Assertions.assertTrue(FileUtils.directoryTraversal(path));
+    }
+
+    @Test
+    void testGetFileChecksum() throws Exception {
+        String filePath1 = "test/testFile1.txt";
+        String filePath2 = "test/testFile2.txt";
+        String filePath3 = "test/testFile3.txt";
+        String content1 = "正正正faffdasfasdfas，한국어； 한글……にほんご\nfrançais";
+        String content2 = "正正正faffdasfasdfas，한국어； 한글……にほん\nfrançais";
+        FileUtils.writeContent2File(content1, filePath1);
+        FileUtils.writeContent2File(content2, filePath2);
+        FileUtils.writeContent2File(content1, filePath3);
+
+        String checksum1 = FileUtils.getFileChecksum(filePath1);
+        String checksum2 = FileUtils.getFileChecksum(filePath2);
+        String checksum3 = FileUtils.getFileChecksum(filePath3);
+
+        Assertions.assertNotEquals(checksum1, checksum2);
+        Assertions.assertEquals(checksum1, checksum3);
+
+        String dirPath = "test/";
+
+        Assertions.assertDoesNotThrow(
+                () -> FileUtils.getFileChecksum(dirPath));
     }
 
 }

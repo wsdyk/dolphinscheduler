@@ -30,6 +30,8 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
+
 /**
  * to master/worker task transport
  */
@@ -37,6 +39,7 @@ import lombok.NoArgsConstructor;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
+@JsonInclude(JsonInclude.Include.NON_NULL)
 public class TaskExecutionContext implements Serializable {
 
     private static final long serialVersionUID = -1L;
@@ -66,6 +69,8 @@ public class TaskExecutionContext implements Serializable {
      */
     private String taskType;
 
+    private String workflowInstanceHost;
+
     /**
      * host
      */
@@ -80,6 +85,11 @@ public class TaskExecutionContext implements Serializable {
      * log path
      */
     private String logPath;
+
+    /**
+     * applicationId path
+     */
+    private String appInfoPath;
 
     /**
      * task json
@@ -137,11 +147,6 @@ public class TaskExecutionContext implements Serializable {
     private String tenantCode;
 
     /**
-     * task queue
-     */
-    private String queue;
-
-    /**
      * process define id
      */
     private int processDefineId;
@@ -162,17 +167,13 @@ public class TaskExecutionContext implements Serializable {
     private String taskParams;
 
     /**
-     * envFile
-     */
-    private String envFile;
-
-    /**
      * environmentConfig
      */
     private String environmentConfig;
 
     /**
      * definedParams
+     * // todo: we need to rename definedParams, prepareParamsMap, paramsMap, this is confusing
      */
     private Map<String, String> definedParams;
 
@@ -210,12 +211,6 @@ public class TaskExecutionContext implements Serializable {
      * current execution status
      */
     private TaskExecutionStatus currentExecutionStatus;
-
-    /**
-     * Task Logger name should be like:
-     * TaskAppId=TASK-{firstSubmitTime}-{processDefineCode}_{processDefineVersion}-{processInstanceId}-{taskInstanceId}
-     */
-    private String taskLogName;
 
     private ResourceParametersHelper resourceParametersHelper;
 
@@ -265,4 +260,6 @@ public class TaskExecutionContext implements Serializable {
      * test flag
      */
     private int testFlag;
+
+    private boolean logBufferEnable;
 }

@@ -21,15 +21,15 @@ import static org.apache.dolphinscheduler.plugin.task.api.TaskConstants.TASK_TYP
 import static org.apache.dolphinscheduler.plugin.task.api.TaskConstants.TASK_TYPE_CONDITIONS;
 import static org.apache.dolphinscheduler.plugin.task.api.TaskConstants.TASK_TYPE_SWITCH;
 
-import org.apache.dolphinscheduler.common.Constants;
+import org.apache.dolphinscheduler.common.constants.Constants;
 import org.apache.dolphinscheduler.common.enums.Priority;
 import org.apache.dolphinscheduler.common.enums.TaskExecuteType;
 import org.apache.dolphinscheduler.common.model.PreviousTaskNode;
-import org.apache.dolphinscheduler.common.utils.CollectionUtils;
 import org.apache.dolphinscheduler.common.utils.JSONUtils;
 import org.apache.dolphinscheduler.plugin.task.api.enums.TaskTimeoutStrategy;
 import org.apache.dolphinscheduler.plugin.task.api.parameters.TaskTimeoutParameter;
 
+import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 
 import java.util.HashMap;
@@ -77,6 +77,8 @@ public class TaskNode {
      * the run flag has two states, NORMAL or FORBIDDEN
      */
     private String runFlag;
+
+    private int isCache;
 
     /**
      * the front field
@@ -131,7 +133,7 @@ public class TaskNode {
     /**
      * node dependency list
      */
-    private List<String> depList;
+    private List<Long> depList;
 
     /**
      * outer dependency information
@@ -240,7 +242,7 @@ public class TaskNode {
 
     public void setPreTasks(String preTasks) {
         this.preTasks = preTasks;
-        this.depList = JSONUtils.toList(preTasks, String.class);
+        this.depList = JSONUtils.toList(preTasks, Long.class);
     }
 
     public String getExtras() {
@@ -251,11 +253,11 @@ public class TaskNode {
         this.extras = extras;
     }
 
-    public List<String> getDepList() {
+    public List<Long> getDepList() {
         return depList;
     }
 
-    public void setDepList(List<String> depList) {
+    public void setDepList(List<Long> depList) {
         if (depList != null) {
             this.depList = depList;
             this.preTasks = JSONUtils.toJsonString(depList);
@@ -276,6 +278,14 @@ public class TaskNode {
 
     public void setRunFlag(String runFlag) {
         this.runFlag = runFlag;
+    }
+
+    public int getIsCache() {
+        return isCache;
+    }
+
+    public void setIsCache(int isCache) {
+        this.isCache = isCache;
     }
 
     public boolean isForbidden() {
@@ -306,7 +316,7 @@ public class TaskNode {
                 && Objects.equals(workerGroup, taskNode.workerGroup)
                 && Objects.equals(environmentCode, taskNode.environmentCode)
                 && Objects.equals(conditionResult, taskNode.conditionResult)
-                && CollectionUtils.equalLists(depList, taskNode.depList)
+                && CollectionUtils.isEqualCollection(depList, taskNode.depList)
                 && Objects.equals(taskExecuteType, taskNode.taskExecuteType);
     }
 

@@ -18,7 +18,7 @@
 package org.apache.dolphinscheduler.server.master.processor;
 
 import org.apache.dolphinscheduler.plugin.task.api.enums.TaskExecutionStatus;
-import org.apache.dolphinscheduler.remote.command.TaskExecuteRunningCommand;
+import org.apache.dolphinscheduler.remote.command.task.TaskExecuteRunningMessage;
 import org.apache.dolphinscheduler.server.master.processor.queue.TaskEvent;
 import org.apache.dolphinscheduler.server.master.processor.queue.TaskEventService;
 import org.apache.dolphinscheduler.service.bean.SpringApplicationContext;
@@ -30,9 +30,9 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.MockedStatic;
 import org.mockito.Mockito;
+import org.mockito.junit.jupiter.MockitoExtension;
 
 import io.netty.channel.Channel;
-import org.mockito.junit.jupiter.MockitoExtension;
 
 /**
  * task ack processor test
@@ -43,7 +43,7 @@ public class TaskAckProcessorTest {
     private TaskExecuteRunningProcessor taskExecuteRunningProcessor;
     private TaskEventService taskEventService;
     private ProcessService processService;
-    private TaskExecuteRunningCommand taskExecuteRunningMessage;
+    private TaskExecuteRunningMessage taskExecuteRunningMessage;
     private TaskEvent taskResponseEvent;
     private Channel channel;
 
@@ -66,7 +66,7 @@ public class TaskAckProcessorTest {
         channel = Mockito.mock(Channel.class);
         taskResponseEvent = Mockito.mock(TaskEvent.class);
 
-        taskExecuteRunningMessage = new TaskExecuteRunningCommand("127.0.0.1:5678",
+        taskExecuteRunningMessage = new TaskExecuteRunningMessage("127.0.0.1:5678",
                 " 127.0.0.1:1234",
                 System.currentTimeMillis());
         taskExecuteRunningMessage.setStatus(TaskExecutionStatus.RUNNING_EXECUTION);

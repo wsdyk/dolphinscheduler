@@ -38,7 +38,7 @@ public class ProcessTaskRelationLogMapperTest extends BaseDaoTest {
      * @return ProcessDefinition
      */
     private ProcessTaskRelationLog insertOne() {
-        //insertOne
+        // insertOne
         ProcessTaskRelationLog processTaskRelationLog = new ProcessTaskRelationLog();
         processTaskRelationLog.setName("def 1");
         processTaskRelationLog.setProcessDefinitionVersion(1);
@@ -57,7 +57,7 @@ public class ProcessTaskRelationLogMapperTest extends BaseDaoTest {
         ProcessTaskRelationLog processTaskRelationLog = insertOne();
         List<ProcessTaskRelationLog> processTaskRelationLogs = processTaskRelationLogMapper
                 .queryByProcessCodeAndVersion(1L, 1);
-        Assertions.assertNotEquals(processTaskRelationLogs.size(), 0);
+        Assertions.assertNotEquals(0, processTaskRelationLogs.size());
     }
 
 }

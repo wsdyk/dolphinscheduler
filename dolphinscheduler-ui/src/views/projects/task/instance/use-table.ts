@@ -23,14 +23,7 @@ import {
   forceSuccess,
   downloadLog
 } from '@/service/modules/task-instances'
-import {
-  NButton,
-  NIcon,
-  NSpace,
-  NTooltip,
-  NSpin,
-  NEllipsis
-} from 'naive-ui'
+import { NButton, NIcon, NSpace, NTooltip, NSpin, NEllipsis } from 'naive-ui'
 import ButtonLink from '@/components/button-link'
 import {
   AlignLeftOutlined,
@@ -39,19 +32,13 @@ import {
 } from '@vicons/antd'
 import { format } from 'date-fns'
 import { useRoute, useRouter } from 'vue-router'
-import {
-  parseTime,
-  renderTableTime,
-  tasksState
-} from '@/common/common'
+import { parseTime, renderTableTime, tasksState } from '@/common/common'
 import {
   COLUMN_WIDTH_CONFIG,
   calculateTableWidth,
   DefaultTableWidth
 } from '@/common/column-width-config'
 import type { Router, TaskInstancesRes, IRecord, ITaskState } from './types'
-import {renderEnvironmentalDistinctionCell} from "@/utils/environmental-distinction";
-
 
 export function useTable() {
   const { t } = useI18n()
@@ -95,12 +82,18 @@ export function useTable() {
       {
         title: t('project.task.task_name'),
         key: 'name',
-        ...COLUMN_WIDTH_CONFIG['name']
+        ...COLUMN_WIDTH_CONFIG['name'],
+        resizable: true,
+        minWidth: 200,
+        maxWidth: 600
       },
       {
         title: t('project.task.workflow_instance'),
         key: 'processInstanceName',
         ...COLUMN_WIDTH_CONFIG['linkName'],
+        resizable: true,
+        minWidth: 300,
+        maxWidth: 600,
         render: (row: {
           processInstanceId: number
           processInstanceName: string
@@ -108,18 +101,22 @@ export function useTable() {
           h(
             ButtonLink,
             {
-              onClick: () =>
-                void router.push({
+              onClick: () => {
+                const routeUrl = router.resolve({
                   name: 'workflow-instance-detail',
                   params: { id: row.processInstanceId },
                   query: { code: projectCode }
                 })
+                window.open(routeUrl.href, '_blank')
+              }
             },
             {
               default: () =>
                 h(
                   NEllipsis,
-                  COLUMN_WIDTH_CONFIG['linkEllipsis'],
+                  {
+                    style: 'max-width: 580px;line-height: 1.5'
+                  },
                   () => row.processInstanceName
                 )
             }
@@ -129,13 +126,6 @@ export function useTable() {
         title: t('project.task.executor'),
         key: 'executorName',
         ...COLUMN_WIDTH_CONFIG['name']
-      },
-      {
-        title: t('project.task.operating_environment'),
-        key: 'testFlag',
-        width: 160,
-        render: (_row: IRecord) =>
-          renderEnvironmentalDistinctionCell(_row.testFlag, t)
       },
       {
         title: t('project.task.node_type'),
@@ -188,6 +178,12 @@ export function useTable() {
         key: 'host',
         ...COLUMN_WIDTH_CONFIG['name'],
         render: (row: IRecord) => row.host || '-'
+      },
+      {
+        title: t('project.task.app_link'),
+        key: 'appLink',
+        ...COLUMN_WIDTH_CONFIG['name'],
+        render: (row: IRecord) => row.appLink || '-'
       },
       {
         title: t('project.task.operation'),
@@ -262,6 +258,7 @@ export function useTable() {
                         circle: true,
                         type: 'info',
                         size: 'small',
+                        disabled: !row.host,
                         onClick: () => downloadLog(row.id)
                       },
                       {

@@ -17,11 +17,12 @@
 
 package org.apache.dolphinscheduler.service.utils;
 
-import org.apache.dolphinscheduler.common.Constants;
+import static org.mockito.ArgumentMatchers.anyString;
+
+import org.apache.dolphinscheduler.common.constants.Constants;
 import org.apache.dolphinscheduler.common.utils.OSUtils;
 import org.apache.dolphinscheduler.common.utils.PropertyUtils;
-import org.apache.dolphinscheduler.plugin.task.api.enums.TaskExecutionStatus;
-import org.apache.dolphinscheduler.service.storage.impl.HadoopUtils;
+
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -32,11 +33,6 @@ import org.mockito.MockitoAnnotations;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import java.util.ArrayList;
-import java.util.List;
-
-import static org.mockito.ArgumentMatchers.anyString;
 
 @ExtendWith(MockitoExtension.class)
 public class ProcessUtilsTest {
@@ -79,27 +75,4 @@ public class ProcessUtilsTest {
         }
     }
 
-    @Test
-    public void testCancelApplication() {
-        List<String> appIds = new ArrayList<>();
-        appIds.add("application_1585532379175_228491");
-        appIds.add("application_1598885606600_3677");
-        String tenantCode = "dev";
-        String executePath = "/ds-exec/1/1/1";
-        TaskExecutionStatus running = TaskExecutionStatus.RUNNING_EXECUTION;
-
-        try (MockedStatic<HadoopUtils> mockedStaticHadoopUtils = Mockito.mockStatic(HadoopUtils.class)) {
-            HadoopUtils hadoop = HadoopUtils.getInstance();
-
-            try {
-                Mockito.when(hadoop.getApplicationStatus("application_1585532379175_228491")).thenReturn(running);
-                Mockito.when(hadoop.getApplicationStatus("application_1598885606600_3677")).thenReturn(running);
-            } catch (Exception e) {
-                e.printStackTrace();
-                ProcessUtils.cancelApplication(appIds, logger, tenantCode, executePath);
-            }
-
-            Assertions.assertNotNull(appIds);
-        }
-    }
 }

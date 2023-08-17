@@ -17,13 +17,15 @@
 
 package org.apache.dolphinscheduler.common.enums;
 
-import com.baomidou.mybatisplus.annotation.EnumValue;
-import lombok.NonNull;
-
 import java.util.HashMap;
 import java.util.Map;
 
+import lombok.NonNull;
+
+import com.baomidou.mybatisplus.annotation.EnumValue;
+
 public enum WorkflowExecutionStatus {
+
     // This class is split from <code>ExecutionStatus</code> #11339.
     // In order to compatible with the old value, the code is not consecutive
     SUBMITTED_SUCCESS(0, "submit success"),
@@ -38,6 +40,7 @@ public enum WorkflowExecutionStatus {
     SERIAL_WAIT(14, "serial wait"),
     READY_BLOCK(15, "ready block"),
     BLOCK(16, "block"),
+    WAIT_TO_RUN(17, "wait to run"),
     ;
 
     private static final Map<Integer, WorkflowExecutionStatus> CODE_MAP = new HashMap<>();

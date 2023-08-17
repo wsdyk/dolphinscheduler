@@ -102,6 +102,10 @@ export default {
                                 link: '/en-us/docs/dev/user_doc/guide/task/sub-process.html',
                             },
                             {
+                                title: 'Dynamic',
+                                link: '/en-us/docs/dev/user_doc/guide/task/dynamic.html',
+                            },
+                            {
                                 title: 'Dependent',
                                 link: '/en-us/docs/dev/user_doc/guide/task/dependent.html',
                             },
@@ -136,6 +140,10 @@ export default {
                             {
                                 title: 'DataX',
                                 link: '/en-us/docs/dev/user_doc/guide/task/datax.html',
+                            },
+                            {
+                                title: 'Sqoop',
+                                link: '/en-us/docs/dev/user_doc/guide/task/sqoop.html',
                             },
                             {
                                 title: 'Pigeon',
@@ -213,6 +221,18 @@ export default {
                                 title: 'AWS Datasync',
                                 link: '/en-us/docs/dev/user_doc/guide/task/datasync.html',
                             },
+                            {
+                                title: 'Kubeflow',
+                                link: '/en-us/docs/dev/user_doc/guide/task/kubeflow.html',
+                            },
+                            {
+                                title: 'Apache Linkis',
+                                link: '/en-us/docs/dev/user_doc/guide/task/linkis.html',
+                            },
+                            {
+                                title: 'SSH',
+                                link: '/en-us/docs/dev/user_doc/guide/task/ssh.html',
+                            },
                         ],
                     },
                     {
@@ -231,12 +251,24 @@ export default {
                                 link: '/en-us/docs/dev/user_doc/guide/parameter/local.html',
                             },
                             {
+                                title: 'Project-level Parameter',
+                                link: '/en-us/docs/dev/user_doc/guide/parameter/project-parameter.html',
+                            },
+                            {
                                 title: 'Parameter Context',
                                 link: '/en-us/docs/dev/user_doc/guide/parameter/context.html',
                             },
                             {
                                 title: 'Parameter Priority',
                                 link: '/en-us/docs/dev/user_doc/guide/parameter/priority.html',
+                            },
+                            {
+                                title: 'File Parameter',
+                                link: '/en-us/docs/dev/user_doc/guide/parameter/file-parameter.html',
+                            },
+                            {
+                                title: 'Vertica',
+                                link: '/en-us/docs/dev/user_doc/guide/datasource/vertica.html',
                             },
                         ],
                     },
@@ -254,6 +286,14 @@ export default {
                             {
                                 title: 'HIVE',
                                 link: '/en-us/docs/dev/user_doc/guide/datasource/hive.html',
+                            },
+                            {
+                                title: 'SNOWFLAKE',
+                                link: '/en-us/docs/dev/user_doc/guide/datasource/snowflake.html',
+                            },
+                            {
+                                title: 'KYUUBI',
+                                link: '/en-us/docs/dev/user_doc/guide/datasource/kyuubi.html',
                             },
                             {
                                 title: 'Spark',
@@ -287,6 +327,42 @@ export default {
                                 title: 'Amazon Athena',
                                 link: '/en-us/docs/dev/user_doc/guide/datasource/athena.html',
                             },
+                            {
+                                title: 'Azure SQL Database',
+                                link: '/en-us/docs/dev/user_doc/guide/datasource/azure-sql.html',
+                            },
+                            {
+                                title: 'Trino',
+                                link: '/en-us/docs/dev/user_doc/guide/datasource/trino.html',
+                            },
+                            {
+                                title: 'StarRocks',
+                                link: '/en-us/docs/dev/user_doc/guide/datasource/starrocks.html',
+                            },
+                            {
+                                title: 'DAMENG',
+                                link: '/en-us/docs/dev/user_doc/guide/datasource/dameng.html',
+                            },
+                            {
+                                title: 'OceanBase',
+                                link: '/en-us/docs/dev/user_doc/guide/datasource/oceanbase.html',
+                            },
+                            {
+                                title: 'SSH',
+                                link: '/en-us/docs/dev/user_doc/guide/datasource/ssh.html',
+                            },
+                            {
+                                title: 'Databend',
+                                link: '/en-us/docs/dev/user_doc/guide/datasource/databend.html',
+                            },
+                            {
+                                title: 'HANA',
+                                link: '/en-us/docs/dev/user_doc/guide/datasource/hana.html',
+                            },
+                            {
+                                title: 'doris',
+                                link: '/en-us/docs/dev/user_doc/guide/datasource/doris.html',
+                            }
                         ],
                     },
                     {
@@ -328,6 +404,10 @@ export default {
                                 title: 'Feishu',
                                 link: '/en-us/docs/dev/user_doc/guide/alert/feishu.html',
                             },
+                            {
+                                title: 'Slack',
+                                link: '/en-us/docs/dev/user_doc/guide/alert/slack.html',
+                            },
                         ],
                     },
                     {
@@ -361,8 +441,18 @@ export default {
                     },
                     {
                         title: 'Security',
-                        link: '/en-us/docs/dev/user_doc/guide/security.html',
+                        children: [
+                            {
+                                title: 'Security (Authorization System)',
+                                link: '/en-us/docs/dev/user_doc/guide/security/security.html',
+                            },
+                            {
+                                title: 'Authentication Type',
+                                link: '/en-us/docs/dev/user_doc/guide/security/authentication-type.html',
+                            }
+                        ],
                     },
+
                     {
                         title: 'Metrics',
                         children: [
@@ -375,6 +465,10 @@ export default {
                     {
                         title: 'Data Quality',
                         link: '/en-us/docs/dev/user_doc/guide/data-quality.html',
+                    },
+                    {
+                        title: 'Remote Logging',
+                        link: '/en-us/docs/dev/user_doc/guide/remote-logging.html',
                     },
                     {
                         title: 'Upgrade',
@@ -392,6 +486,10 @@ export default {
                     {
                         title: 'Expansion and Reduction',
                         link: '/en-us/docs/dev/user_doc/guide/expansion-reduction.html',
+                    },
+                    {
+                        title: 'Demo',
+                        link: '/en-us/docs/dev/user_doc/guide/demo.html',
                     },
                 ],
             },
@@ -459,15 +557,15 @@ export default {
                 children: [
                     {
                         title: 'Open API',
-                        link: '/en-us/docs/dev/user_doc/guide/open-api.html',
+                        link: '/en-us/docs/dev/user_doc/guide/api/open-api.html',
                     },
                     {
                         title: 'PyDolphinScheduler',
-                        link: '/python/dev/index.html',
+                        link: '/en-us/docs/dev/user_doc/guide/api/pydolphinscheduler.html',
                     },
                     {
                         title: 'Health Check',
-                        link: '/en-us/docs/dev/user_doc/guide/healthcheck.html',
+                        link: '/en-us/docs/dev/user_doc/guide/api/healthcheck.html',
                     },
                 ],
             },
@@ -602,21 +700,8 @@ export default {
                         ],
                     },
                     {
-                        title: 'Release Guide',
-                        children: [
-                            {
-                                title: 'Release Preparation',
-                                link: '/en-us/docs/dev/user_doc/contribute/release/release-prepare.html',
-                            },
-                            {
-                                title: 'Release Guide',
-                                link: '/en-us/docs/dev/user_doc/contribute/release/release.html',
-                            },
-                            {
-                                title: 'Release Post',
-                                link: '/en-us/docs/dev/user_doc/contribute/release/release-post.html',
-                            },
-                        ],
+                        title: 'Releasing',
+                        link: '/en-us/docs/dev/user_doc/contribute/release.html',
                     },
                     {
                         title: 'Questions & Communications',
@@ -746,6 +831,10 @@ export default {
                                 link: '/zh-cn/docs/dev/user_doc/guide/task/sub-process.html',
                             },
                             {
+                                title: 'Dynamic',
+                                link: '/zh-cn/docs/dev/user_doc/guide/task/dynamic.html',
+                            },
+                            {
                                 title: 'Dependent',
                                 link: '/zh-cn/docs/dev/user_doc/guide/task/dependent.html',
                             },
@@ -780,6 +869,10 @@ export default {
                             {
                                 title: 'DataX',
                                 link: '/zh-cn/docs/dev/user_doc/guide/task/datax.html',
+                            },
+                            {
+                                title: 'Sqoop',
+                                link: '/zh-cn/docs/dev/user_doc/guide/task/sqoop.html',
                             },
                             {
                                 title: 'Pigeon',
@@ -857,6 +950,22 @@ export default {
                                 title: 'AWS Datasync',
                                 link: '/zh-cn/docs/dev/user_doc/guide/task/datasync.html',
                             },
+                            {
+                                title: 'Kubeflow',
+                                link: '/zh-cn/docs/dev/user_doc/guide/task/kubeflow.html',
+                            },
+                            {
+                                title: 'Apache Linkis',
+                                link: '/zh-cn/docs/dev/user_doc/guide/task/linkis.html',
+                            },
+                            {
+                                title: 'SSH',
+                                link: '/zh-cn/docs/dev/user_doc/guide/task/ssh.html',
+                            },
+                            {
+                                title: 'Vertica',
+                                link: '/zh-cn/docs/dev/user_doc/guide/datasource/vertica.html',
+                            },
                         ],
                     },
                     {
@@ -875,12 +984,20 @@ export default {
                                 link: '/zh-cn/docs/dev/user_doc/guide/parameter/local.html',
                             },
                             {
+                                title: '项目级别参数',
+                                link: '/zh-cn/docs/dev/user_doc/guide/parameter/project-parameter.html',
+                            },
+                            {
                                 title: '参数传递',
                                 link: '/zh-cn/docs/dev/user_doc/guide/parameter/context.html',
                             },
                             {
                                 title: '参数优先级',
                                 link: '/zh-cn/docs/dev/user_doc/guide/parameter/priority.html',
+                            },
+                            {
+                                title: '文件参数传递',
+                                link: '/zh-cn/docs/dev/user_doc/guide/parameter/file-parameter.html',
                             },
                         ],
                     },
@@ -900,6 +1017,14 @@ export default {
                                 link: '/zh-cn/docs/dev/user_doc/guide/datasource/hive.html',
                             },
                             {
+                                title: 'SNOWFLAKE',
+                                link: '/zh-cn/docs/dev/user_doc/guide/datasource/snowflake.html',
+                            },
+                            {
+                                title: 'KYUUBI',
+                                link: '/zh-cn/docs/dev/user_doc/guide/datasource/kyuubi.html',
+                            },
+                            {
                                 title: 'Spark',
                                 link: '/zh-cn/docs/dev/user_doc/guide/datasource/spark.html',
                             },
@@ -907,6 +1032,50 @@ export default {
                                 title: 'Amazon Athena',
                                 link: '/zh-cn/docs/dev/user_doc/guide/datasource/athena.html',
                             },
+                            {
+                                title: 'Azure SQL Database',
+                                link: '/zh-cn/docs/dev/user_doc/guide/datasource/azure-sql.html',
+                            },
+                            {
+                                title: 'Redshift',
+                                link: '/zh-cn/docs/dev/user_doc/guide/datasource/redshift.html',
+                            },
+                            {
+                                title: 'Oracle',
+                                link: '/zh-cn/docs/dev/user_doc/guide/datasource/oracle.html',
+                            },
+                            {
+                                title: 'Trino',
+                                link: '/zh-cn/docs/dev/user_doc/guide/datasource/trino.html',
+                            },
+                            {
+                                title: 'StarRocks',
+                                link: '/zh-cn/docs/dev/user_doc/guide/datasource/starrocks.html',
+                            },
+                            {
+                                title: 'DAMENG',
+                                link: '/zh-cn/docs/dev/user_doc/guide/datasource/dameng.html',
+                            },
+                            {
+                                title: 'OceanBase',
+                                link: '/zh-cn/docs/dev/user_doc/guide/datasource/oceanbase.html',
+                            },
+                            {
+                                title: 'SSH',
+                                link: '/zh-cn/docs/dev/user_doc/guide/datasource/ssh.html',
+                            },
+                            {
+                                title: 'Databend',
+                                link: '/zh-cn/docs/dev/user_doc/guide/datasource/databend.html',
+                            },
+                            {
+                                title: 'HANA',
+                                link: '/zh-cn/docs/dev/user_doc/guide/datasource/hana.html',
+                            },
+                            {
+                                title: 'Doris',
+                                link: '/zh-cn/docs/dev/user_doc/guide/datasource/doris.html',
+                            }
                         ],
                     },
                     {
@@ -948,6 +1117,10 @@ export default {
                                 title: '飞书告警',
                                 link: '/zh-cn/docs/dev/user_doc/guide/alert/feishu.html',
                             },
+                            {
+                                title: 'Slack告警',
+                                link: '/zh-cn/docs/dev/user_doc/guide/alert/slack.html',
+                            },
                         ],
                     },
                     {
@@ -981,7 +1154,16 @@ export default {
                     },
                     {
                         title: '安全中心',
-                        link: '/zh-cn/docs/dev/user_doc/guide/security.html',
+                        children: [
+                            {
+                                title: '安全中心（权限系统）',
+                                link: '/zh-cn/docs/dev/user_doc/guide/security/security.html',
+                            },
+                            {
+                                title: '认证方式',
+                                link: '/zh-cn/docs/dev/user_doc/guide/security/authentication-type.html',
+                            }
+                        ],
                     },
                     {
                         title: '指标相关',
@@ -995,6 +1177,10 @@ export default {
                     {
                         title: '数据质量',
                         link: '/zh-cn/docs/dev/user_doc/guide/data-quality.html',
+                    },
+                    {
+                        title: '远程日志存储',
+                        link: '/zh-cn/docs/dev/user_doc/guide/remote-logging.html',
                     },
                     {
                         title: '升级',
@@ -1012,6 +1198,10 @@ export default {
                     {
                         title: '扩/缩容',
                         link: '/zh-cn/docs/dev/user_doc/guide/expansion-reduction.html',
+                    },
+                    {
+                        title: 'Demo',
+                        link: '/zh-cn/docs/dev/user_doc/guide/demo.html',
                     },
                 ],
             },
@@ -1079,15 +1269,15 @@ export default {
                 children: [
                     {
                         title: 'API调用',
-                        link: '/zh-cn/docs/dev/user_doc/guide/open-api.html',
+                        link: '/zh-cn/docs/dev/user_doc/guide/api/open-api.html',
                     },
                     {
                         title: 'PyDolphinScheduler',
-                        link: '/python/dev/index.html',
+                        link: '/zh-cn/docs/dev/user_doc/guide/api/pydolphinscheduler.html',
                     },
                     {
                         title: '健康检查',
-                        link: '/zh-cn/docs/dev/user_doc/guide/healthcheck.html',
+                        link: '/zh-cn/docs/dev/user_doc/guide/api/healthcheck.html',
                     },
                 ],
             },
@@ -1222,21 +1412,8 @@ export default {
                         ],
                     },
                     {
-                        title: '发版指南',
-                        children: [
-                            {
-                                title: '发版准备',
-                                link: '/zh-cn/docs/dev/user_doc/contribute/release/release-prepare.html',
-                            },
-                            {
-                                title: '发版指南',
-                                link: '/zh-cn/docs/dev/user_doc/contribute/release/release.html',
-                            },
-                            {
-                                title: '发版后续',
-                                link: '/zh-cn/docs/dev/user_doc/contribute/release/release-post.html',
-                            },
-                        ],
+                        title: '发版',
+                        link: '/zh-cn/docs/dev/user_doc/contribute/release.html',
                     },
                     {
                         title: '问题与交流',

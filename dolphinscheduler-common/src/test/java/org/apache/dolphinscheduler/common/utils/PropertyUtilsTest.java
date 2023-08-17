@@ -17,9 +17,19 @@
 
 package org.apache.dolphinscheduler.common.utils;
 
-import org.apache.dolphinscheduler.common.Constants;
+import org.apache.dolphinscheduler.common.constants.Constants;
+
+import org.apache.commons.lang3.StringUtils;
+
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.Set;
+import java.util.stream.Collectors;
+
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
+
+import com.google.common.collect.Sets;
 
 public class PropertyUtilsTest {
 
@@ -30,6 +40,17 @@ public class PropertyUtilsTest {
 
     @Test
     public void getResUploadStartupState() {
-        Assertions.assertFalse(PropertyUtils.getResUploadStartupState());
+        Assertions.assertTrue(PropertyUtils.isResourceStorageStartup());
+    }
+
+    @Test
+    public void getSet() {
+        Set<String> networkInterface = PropertyUtils.getSet("networkInterface", value -> {
+            if (StringUtils.isEmpty(value)) {
+                return Collections.emptySet();
+            }
+            return Arrays.stream(value.split(",")).map(String::trim).collect(Collectors.toSet());
+        }, Sets.newHashSet("docker0"));
+        Assertions.assertEquals(Sets.newHashSet("docker0"), networkInterface);
     }
 }

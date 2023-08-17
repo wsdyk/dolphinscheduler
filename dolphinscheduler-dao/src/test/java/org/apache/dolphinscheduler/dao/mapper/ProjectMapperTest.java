@@ -22,7 +22,6 @@ import org.apache.dolphinscheduler.dao.entity.Project;
 import org.apache.dolphinscheduler.dao.entity.ProjectUser;
 import org.apache.dolphinscheduler.dao.entity.User;
 
-import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 
@@ -50,7 +49,7 @@ public class ProjectMapperTest extends BaseDaoTest {
      * @return Project
      */
     private Project insertOne() {
-        //insertOne
+        // insertOne
         Project project = new Project();
         project.setName("ut project");
         project.setUserId(111);
@@ -66,10 +65,10 @@ public class ProjectMapperTest extends BaseDaoTest {
      */
     @Test
     public void testUpdate() {
-        //insertOne
+        // insertOne
         Project project = insertOne();
         project.setCreateTime(new Date());
-        //update
+        // update
         int update = projectMapper.updateById(project);
         Assertions.assertEquals(update, 1);
     }
@@ -90,9 +89,9 @@ public class ProjectMapperTest extends BaseDaoTest {
     @Test
     public void testQuery() {
         Project project = insertOne();
-        //query
+        // query
         List<Project> projects = projectMapper.selectList(null);
-        Assertions.assertNotEquals(projects.size(), 0);
+        Assertions.assertNotEquals(0, projects.size());
     }
 
     /**
@@ -110,7 +109,7 @@ public class ProjectMapperTest extends BaseDaoTest {
         projectMapper.updateById(project);
         Project project1 = projectMapper.queryDetailById(project.getId());
 
-        Assertions.assertNotEquals(project1, null);
+        Assertions.assertNotEquals(null, project1);
         Assertions.assertEquals(project1.getUserName(), user.getUserName());
     }
 
@@ -128,7 +127,7 @@ public class ProjectMapperTest extends BaseDaoTest {
         projectMapper.updateById(project);
         Project project1 = projectMapper.queryByName(project.getName());
 
-        Assertions.assertNotEquals(project1, null);
+        Assertions.assertNotEquals(null, project1);
     }
 
     /**
@@ -146,17 +145,15 @@ public class ProjectMapperTest extends BaseDaoTest {
 
         Page<Project> page = new Page(1, 3);
         IPage<Project> projectIPage = projectMapper.queryProjectListPaging(
-            page,
-            null,
-            null
-        );
+                page,
+                null,
+                null);
         IPage<Project> projectIPage1 = projectMapper.queryProjectListPaging(
-            page,
-            null,
-            project.getName()
-        );
-        Assertions.assertEquals(projectIPage.getTotal(), 1);
-        Assertions.assertEquals(projectIPage1.getTotal(), 1);
+                page,
+                null,
+                project.getName());
+        Assertions.assertEquals(1, projectIPage.getTotal());
+        Assertions.assertEquals(1, projectIPage1.getTotal());
     }
 
     /**
@@ -168,7 +165,7 @@ public class ProjectMapperTest extends BaseDaoTest {
 
         List<Project> projects = projectMapper.queryProjectCreatedByUser(project.getUserId());
 
-        Assertions.assertNotEquals(projects.size(), 0);
+        Assertions.assertNotEquals(0, projects.size());
 
     }
 
@@ -181,7 +178,7 @@ public class ProjectMapperTest extends BaseDaoTest {
 
         List<Project> projects = projectMapper.queryProjectCreatedByUser(project.getUserId());
 
-        Assertions.assertNotEquals(projects.size(), 0);
+        Assertions.assertNotEquals(0, projects.size());
     }
 
     /**
@@ -192,10 +189,9 @@ public class ProjectMapperTest extends BaseDaoTest {
         Project project = insertOne();
 
         List<Project> projects = projectMapper.queryProjectExceptUserId(
-            100000
-        );
+                100000);
 
-        Assertions.assertNotEquals(projects.size(), 0);
+        Assertions.assertNotEquals(0, projects.size());
     }
 
     @Test
@@ -217,17 +213,44 @@ public class ProjectMapperTest extends BaseDaoTest {
 
         List<Project> allProject = projectMapper.queryAllProject(user.getId());
 
-        Assertions.assertNotEquals(allProject.size(), 0);
+        Assertions.assertNotEquals(0, allProject.size());
     }
 
-    /**
-     * test query project permission
-     */
+    private Project insertProject(long projectCode, String projectName, int userId) {
+        Project project = new Project();
+        project.setName(projectName);
+        project.setUserId(userId);
+        project.setCode(projectCode);
+        project.setCreateTime(new Date());
+        project.setUpdateTime(new Date());
+        projectMapper.insert(project);
+        return project;
+    }
+
     @Test
     public void testListAuthorizedProjects() {
-        Project project = insertOne();
-        List<Project> projects = projectMapper.listAuthorizedProjects(1, Collections.singletonList(project.getId()));
-        Assertions.assertEquals(projects.size(), 0);
+        User user = new User();
+        user.setUserName("ut user");
+        userMapper.insert(user);
+
+        // project1: created by user
+        insertProject(1, "project 1", user.getId());
+
+        // project2: not created by user
+        insertProject(2, "project 2", user.getId() + 1);
+
+        // project3: not created by user but is authorized to user
+        Project project3 = insertProject(3, "project 3", user.getId() + 1);
+        ProjectUser projectUser = new ProjectUser();
+        projectUser.setProjectId(project3.getId());
+        projectUser.setUserId(user.getId());
+        projectUser.setCreateTime(new Date());
+        projectUser.setUpdateTime(new Date());
+        projectUserMapper.insert(projectUser);
+
+        List<Project> projects = projectMapper.listAuthorizedProjects(user.getId(), null);
+
+        Assertions.assertEquals(2, projects.size());
     }
 
 }

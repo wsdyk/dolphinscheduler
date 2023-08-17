@@ -69,6 +69,16 @@ public interface QueueService {
     Result updateQueue(User loginUser, int id, String queue, String queueName);
 
     /**
+     * delete queue
+     *
+     * @param loginUser login user
+     * @param id queue id
+     * @return delete result code
+     * @throws Exception exception
+     */
+    Map<String, Object> deleteQueueById(User loginUser, int id) throws Exception;
+
+    /**
      * verify queue and queueName
      *
      * @param queue     queue

@@ -42,8 +42,13 @@ public class K8sClientService {
     @Autowired
     private K8sManager k8sManager;
 
-    public ResourceQuota upsertNamespaceAndResourceToK8s(K8sNamespace k8sNamespace, String yamlStr) throws RemotingException {
-        upsertNamespaceToK8s(k8sNamespace.getNamespace(), k8sNamespace.getClusterCode());
+    public ResourceQuota upsertNamespaceAndResourceToK8s(K8sNamespace k8sNamespace,
+                                                         String yamlStr) throws RemotingException {
+        if (!checkNamespaceToK8s(k8sNamespace.getNamespace(), k8sNamespace.getClusterCode())) {
+            throw new RemotingException(String.format(
+                    "namespace %s does not exist in k8s cluster, please create namespace in k8s cluster first",
+                    k8sNamespace.getNamespace()));
+        }
         return upsertNamespacedResourceToK8s(k8sNamespace, yamlStr);
     }
 
@@ -61,58 +66,48 @@ public class K8sClientService {
         return getNamespaceFromK8s(name, clusterCode);
     }
 
-    private ResourceQuota upsertNamespacedResourceToK8s(K8sNamespace k8sNamespace, String yamlStr) throws RemotingException {
+    private ResourceQuota upsertNamespacedResourceToK8s(K8sNamespace k8sNamespace,
+                                                        String yamlStr) throws RemotingException {
 
         KubernetesClient client = k8sManager.getK8sClient(k8sNamespace.getClusterCode());
 
-        //创建资源
+        // 创建资源
         ResourceQuota queryExist = client.resourceQuotas()
-            .inNamespace(k8sNamespace.getNamespace())
-            .withName(k8sNamespace.getNamespace())
-            .get();
+                .inNamespace(k8sNamespace.getNamespace())
+                .withName(k8sNamespace.getNamespace())
+                .get();
 
         ResourceQuota body = yaml.loadAs(yamlStr, ResourceQuota.class);
 
         if (queryExist != null) {
             if (k8sNamespace.getLimitsCpu() == null && k8sNamespace.getLimitsMemory() == null) {
                 client.resourceQuotas().inNamespace(k8sNamespace.getNamespace())
-                    .withName(k8sNamespace.getNamespace())
-                    .delete();
+                        .withName(k8sNamespace.getNamespace())
+                        .delete();
                 return null;
             }
         }
 
         return client.resourceQuotas().inNamespace(k8sNamespace.getNamespace())
-            .withName(k8sNamespace.getNamespace())
-            .createOrReplace(body);
+                .withName(k8sNamespace.getNamespace())
+                .createOrReplace(body);
     }
 
     private Optional<Namespace> getNamespaceFromK8s(String name, Long clusterCode) throws RemotingException {
         NamespaceList listNamespace =
-            k8sManager.getK8sClient(clusterCode).namespaces().list();
+                k8sManager.getK8sClient(clusterCode).namespaces().list();
 
         Optional<Namespace> list =
-            listNamespace.getItems().stream()
-                .filter((Namespace namespace) ->
-                    namespace.getMetadata().getName().equals(name))
-                .findFirst();
+                listNamespace.getItems().stream()
+                        .filter((Namespace namespace) -> namespace.getMetadata().getName().equals(name))
+                        .findFirst();
 
         return list;
     }
 
-    private Namespace upsertNamespaceToK8s(String name, Long clusterCode) throws RemotingException {
+    private boolean checkNamespaceToK8s(String name, Long clusterCode) throws RemotingException {
         Optional<Namespace> result = getNamespaceFromK8s(name, clusterCode);
-        //if not exist create
-        if (!result.isPresent()) {
-            KubernetesClient client = k8sManager.getK8sClient(clusterCode);
-            Namespace body = new Namespace();
-            ObjectMeta meta = new ObjectMeta();
-            meta.setNamespace(name);
-            meta.setName(name);
-            body.setMetadata(meta);
-            return client.namespaces().create(body);
-        }
-        return result.get();
+        return result.isPresent();
     }
 
 }

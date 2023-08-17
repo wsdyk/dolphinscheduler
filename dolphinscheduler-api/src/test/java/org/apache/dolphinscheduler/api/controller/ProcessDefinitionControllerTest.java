@@ -21,7 +21,7 @@ import org.apache.dolphinscheduler.api.enums.Status;
 import org.apache.dolphinscheduler.api.service.impl.ProcessDefinitionServiceImpl;
 import org.apache.dolphinscheduler.api.utils.PageInfo;
 import org.apache.dolphinscheduler.api.utils.Result;
-import org.apache.dolphinscheduler.common.Constants;
+import org.apache.dolphinscheduler.common.constants.Constants;
 import org.apache.dolphinscheduler.common.enums.ProcessExecutionTypeEnum;
 import org.apache.dolphinscheduler.common.enums.ReleaseState;
 import org.apache.dolphinscheduler.common.enums.UserType;
@@ -90,20 +90,19 @@ public class ProcessDefinitionControllerTest {
         String globalParams = "[]";
         String locations = "[]";
         int timeout = 0;
-        String tenantCode = "root";
         Map<String, Object> result = new HashMap<>();
         putMsg(result, Status.SUCCESS);
         result.put(Constants.DATA_LIST, 1);
 
         Mockito.when(
                 processDefinitionService.createProcessDefinition(user, projectCode, name, description, globalParams,
-                        locations, timeout, tenantCode, relationJson, taskDefinitionJson, "",
+                        locations, timeout, relationJson, taskDefinitionJson, "",
                         ProcessExecutionTypeEnum.PARALLEL))
                 .thenReturn(result);
 
         Result response =
                 processDefinitionController.createProcessDefinition(user, projectCode, name, description, globalParams,
-                        locations, timeout, tenantCode, relationJson, taskDefinitionJson, "",
+                        locations, timeout, relationJson, taskDefinitionJson, "",
                         ProcessExecutionTypeEnum.PARALLEL);
         Assertions.assertEquals(Status.SUCCESS.getCode(), response.getCode().intValue());
     }
@@ -160,7 +159,6 @@ public class ProcessDefinitionControllerTest {
         String description = "desc test";
         String globalParams = "[]";
         int timeout = 0;
-        String tenantCode = "root";
         long code = 123L;
         Map<String, Object> result = new HashMap<>();
         putMsg(result, Status.SUCCESS);
@@ -168,12 +166,12 @@ public class ProcessDefinitionControllerTest {
 
         Mockito.when(processDefinitionService.updateProcessDefinition(user, projectCode, name, code, description,
                 globalParams,
-                locations, timeout, tenantCode, relationJson, taskDefinitionJson, "",
+                locations, timeout, relationJson, taskDefinitionJson, "",
                 ProcessExecutionTypeEnum.PARALLEL)).thenReturn(result);
 
         Result response = processDefinitionController.updateProcessDefinition(user, projectCode, name, code,
                 description, globalParams,
-                locations, timeout, tenantCode, relationJson, taskDefinitionJson, "", ProcessExecutionTypeEnum.PARALLEL,
+                locations, timeout, relationJson, taskDefinitionJson, "", ProcessExecutionTypeEnum.PARALLEL,
                 ReleaseState.OFFLINE);
         Assertions.assertEquals(Status.SUCCESS.getCode(), response.getCode().intValue());
     }
@@ -429,6 +427,20 @@ public class ProcessDefinitionControllerTest {
         Result result = processDefinitionController.deleteProcessDefinitionVersion(
                 user, projectCode, 1, 10);
         Assertions.assertEquals(Status.SUCCESS.getCode(), (int) result.getCode());
+    }
+
+    @Test
+    public void testViewVariables() {
+        long projectCode = 1L;
+        Map<String, Object> resultMap = new HashMap<>();
+        putMsg(resultMap, Status.SUCCESS);
+
+        Mockito.when(processDefinitionService.viewVariables(user, projectCode, 1))
+                .thenReturn(resultMap);
+
+        Result result = processDefinitionController.viewVariables(user, projectCode, 1L);
+
+        Assertions.assertEquals(Status.SUCCESS.getCode(), result.getCode().intValue());
     }
 
 }

@@ -22,11 +22,14 @@ import static com.fasterxml.jackson.databind.DeserializationFeature.FAIL_ON_UNKN
 import static com.fasterxml.jackson.databind.DeserializationFeature.READ_UNKNOWN_ENUM_VALUES_AS_NULL;
 import static com.fasterxml.jackson.databind.MapperFeature.REQUIRE_SETTERS_FOR_GETTERS;
 import static java.nio.charset.StandardCharsets.UTF_8;
+import static org.apache.dolphinscheduler.common.constants.DateConstants.YYYY_MM_DD_HH_MM_SS;
 
-import org.apache.dolphinscheduler.common.Constants;
+import org.apache.commons.lang3.StringUtils;
 
 import java.io.IOException;
 import java.text.SimpleDateFormat;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -36,8 +39,7 @@ import java.util.TimeZone;
 
 import javax.annotation.Nullable;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.core.JsonParser;
@@ -51,6 +53,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.ObjectWriter;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.databind.SerializerProvider;
+import com.fasterxml.jackson.databind.json.JsonMapper;
+import com.fasterxml.jackson.databind.module.SimpleModule;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.fasterxml.jackson.databind.node.TextNode;
@@ -60,24 +64,24 @@ import com.google.common.base.Strings;
 /**
  * json utils
  */
+@Slf4j
 public class JSONUtils {
 
-    private static final Logger logger = LoggerFactory.getLogger(JSONUtils.class);
-
     static {
-        logger.info("init timezone: {}", TimeZone.getDefault());
+        log.info("init timezone: {}", TimeZone.getDefault());
     }
 
-    /**
-     * can use static singleton, inject: just make sure to reuse!
-     */
-    private static final ObjectMapper objectMapper = new ObjectMapper()
+    private static final ObjectMapper objectMapper = JsonMapper.builder()
             .configure(FAIL_ON_UNKNOWN_PROPERTIES, false)
             .configure(ACCEPT_EMPTY_ARRAY_AS_NULL_OBJECT, true)
             .configure(READ_UNKNOWN_ENUM_VALUES_AS_NULL, true)
             .configure(REQUIRE_SETTERS_FOR_GETTERS, true)
-            .setTimeZone(TimeZone.getDefault())
-            .setDateFormat(new SimpleDateFormat(Constants.YYYY_MM_DD_HH_MM_SS));
+            .addModule(new SimpleModule()
+                    .addSerializer(LocalDateTime.class, new LocalDateTimeSerializer())
+                    .addDeserializer(LocalDateTime.class, new LocalDateTimeDeserializer()))
+            .defaultTimeZone(TimeZone.getDefault())
+            .defaultDateFormat(new SimpleDateFormat(YYYY_MM_DD_HH_MM_SS))
+            .build();
 
     private JSONUtils() {
         throw new UnsupportedOperationException("Construct JSONUtils");
@@ -111,7 +115,7 @@ public class JSONUtils {
             ObjectWriter writer = objectMapper.writer(feature);
             return writer.writeValueAsString(object);
         } catch (Exception e) {
-            logger.error("object to json exception!", e);
+            log.error("object to json exception!", e);
         }
 
         return null;
@@ -139,7 +143,7 @@ public class JSONUtils {
         try {
             return objectMapper.readValue(json, clazz);
         } catch (Exception e) {
-            logger.error("Parse object exception, jsonStr: {}, class: {}", json, clazz, e);
+            log.error("Parse object exception, jsonStr: {}, class: {}", json, clazz, e);
         }
         return null;
     }
@@ -177,7 +181,7 @@ public class JSONUtils {
             CollectionType listType = objectMapper.getTypeFactory().constructCollectionType(ArrayList.class, clazz);
             return objectMapper.readValue(json, listType);
         } catch (Exception e) {
-            logger.error("parse list exception!", e);
+            log.error("parse list exception!", e);
         }
 
         return Collections.emptyList();
@@ -199,7 +203,7 @@ public class JSONUtils {
             objectMapper.readTree(json);
             return true;
         } catch (IOException e) {
-            logger.error("check json object valid exception!", e);
+            log.error("check json object valid exception!", e);
         }
 
         return false;
@@ -255,7 +259,7 @@ public class JSONUtils {
             return objectMapper.readValue(json, new TypeReference<Map<K, V>>() {
             });
         } catch (Exception e) {
-            logger.error("json to map exception!", e);
+            log.error("json to map exception!", e);
         }
 
         return Collections.emptyMap();
@@ -296,7 +300,7 @@ public class JSONUtils {
         try {
             return objectMapper.readValue(json, type);
         } catch (Exception e) {
-            logger.error("json to map exception!", e);
+            log.error("json to map exception!", e);
         }
 
         return null;
@@ -311,6 +315,14 @@ public class JSONUtils {
     public static String toJsonString(Object object) {
         try {
             return objectMapper.writeValueAsString(object);
+        } catch (Exception e) {
+            throw new RuntimeException("Object json deserialization exception.", e);
+        }
+    }
+
+    public static String toPrettyJsonString(Object object) {
+        try {
+            return objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(object);
         } catch (Exception e) {
             throw new RuntimeException("Object json deserialization exception.", e);
         }
@@ -331,7 +343,7 @@ public class JSONUtils {
         try {
             json = toJsonString(obj);
         } catch (Exception e) {
-            logger.error("json serialize exception.", e);
+            log.error("json serialize exception.", e);
         }
 
         return json.getBytes(UTF_8);
@@ -339,7 +351,7 @@ public class JSONUtils {
 
     public static ObjectNode parseObject(String text) {
         try {
-            if (text.isEmpty()) {
+            if (StringUtils.isEmpty(text)) {
                 return parseObject(text, ObjectNode.class);
             } else {
                 return (ObjectNode) objectMapper.readTree(text);
@@ -384,5 +396,27 @@ public class JSONUtils {
             }
         }
 
+    }
+
+    public static class LocalDateTimeSerializer extends JsonSerializer<LocalDateTime> {
+
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern(YYYY_MM_DD_HH_MM_SS);
+
+        @Override
+        public void serialize(LocalDateTime value,
+                              JsonGenerator gen,
+                              SerializerProvider serializers) throws IOException {
+            gen.writeString(value.format(formatter));
+        }
+    }
+
+    public static class LocalDateTimeDeserializer extends JsonDeserializer<LocalDateTime> {
+
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern(YYYY_MM_DD_HH_MM_SS);
+
+        @Override
+        public LocalDateTime deserialize(JsonParser p, DeserializationContext context) throws IOException {
+            return LocalDateTime.parse(p.getValueAsString(), formatter);
+        }
     }
 }
